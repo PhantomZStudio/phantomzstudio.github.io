@@ -317,6 +317,21 @@
         }
         .email-box input:focus { border-color: #fff; }
 
+        /* === FOOTER SPARKS STYLE === */
+        #sparks-footer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 3;
+            pointer-events: none;
+        }
+
+        #devlog .hero-bg {
+            filter: brightness(0.4) grayscale(50%); /* Sedikit lebih gelap agar teks form terbaca */
+        }
+
         /* --- RESPONSIVE --- */
         @media (max-width: 900px) {
             .card-cinematic, .card-cinematic:nth-child(even) { grid-template-columns: 1fr; direction: ltr; gap: 30px; }
@@ -408,7 +423,7 @@
             <p class="story-line">Long before the fall, civilizations reached heights beyond imagination.</p>
             <p class="story-line">They built monuments that touched the sky, and machines that defied nature itself.</p>
             <p class="story-line">But ambition turned into ruin.</p>
-            <br>
+            ```
             <p class="story-line">No one remembers exactly when it ended.</p>
             <p class="story-line">Some say the world was consumed by its own creation.</p>
             <p class="story-line">Others believe something ancient awakened beneath the surface.</p>
@@ -609,14 +624,24 @@
     </section>
     
 
-    <footer id="devlog">
-        <h2 style="font-family: var(--font-head); letter-spacing: 5px;">Join the Dev Log</h2>
-        <p style="color: var(--text-muted); margin-top: 10px;">Be the first to witness the ruins come to life.</p>
-        <div class="email-box">
-            <input type="email" placeholder="Enter your email address...">
-            <button class="btn-cinematic" onclick="alert('Welcome to the ruins.')">Notify Me</button>
+    <footer id="devlog" style="position: relative; overflow: hidden;">
+        <div class="hero-bg-container">
+            <div class="hero-bg" style="background-image: url('plains.png'); transform: scale(1.1);"></div>
         </div>
-        <p style="margin-top: 80px; font-size: 0.7rem; color: #333; letter-spacing: 2px;">© 2026 THE LAST RUIN PROJECT BY PHANTOMZ STUDIO. ALL RIGHTS RESERVED.</p>
+        <div class="dark-overlay" style="background: linear-gradient(to top, rgba(0,0,0,0.9), rgba(0,0,0,0.4));"></div>
+        <div class="fog-layer" style="opacity: 0.1;"></div>
+        
+        <canvas id="sparks-footer"></canvas>
+
+        <div style="position: relative; z-index: 10;">
+            <h2 style="font-family: var(--font-head); letter-spacing: 5px;">Join the Dev Log</h2>
+            <p style="color: var(--text-muted); margin-top: 10px;">Be the first to witness the ruins come to life.</p>
+            <div class="email-box">
+                <input type="email" placeholder="Enter your email address...">
+                <button class="btn-cinematic" onclick="alert('Welcome to the ruins.')">Notify Me</button>
+            </div>
+            <p style="margin-top: 80px; font-size: 0.7rem; color: #555; letter-spacing: 2px;">© 2026 THE LAST RUIN PROJECT. ALL RIGHTS RESERVED.</p>
+        </div>
     </footer>
 
     <audio id="theme-song" loop>
@@ -637,20 +662,27 @@
             else nav.classList.remove('scrolled');
         };
 
-        // --- 2. SPARK PARTICLES SYSTEM (CANVAS) ---
-        const canvas = document.getElementById('sparks');
-        const ctx = canvas.getContext('2d');
-        let particles = [];
+        // --- UPDATE PARTICLE SYSTEM ---
+        const canvasHero = document.getElementById('sparks');
+        const canvasFooter = document.getElementById('sparks-footer');
+        const ctxHero = canvasHero.getContext('2d');
+        const ctxFooter = canvasFooter.getContext('2d');
 
-        function initCanvas() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
+        let particlesHero = [];
+        let particlesFooter = [];
+
+        function initCanvases() {
+            canvasHero.width = window.innerWidth;
+            canvasHero.height = canvasHero.parentElement.offsetHeight;
+            canvasFooter.width = window.innerWidth;
+            canvasFooter.height = canvasFooter.parentElement.offsetHeight;
         }
-        initCanvas();
-        window.addEventListener('resize', initCanvas);
+        initCanvases();
+        window.addEventListener('resize', initCanvases);
 
         class Particle {
-            constructor() {
+            constructor(canvas) {
+                this.canvas = canvas;
                 this.x = Math.random() * canvas.width;
                 this.y = canvas.height + Math.random() * 100;
                 this.size = Math.random() * 2 + 0.5;
@@ -664,7 +696,7 @@
                 this.x += this.speedX;
                 this.opacity -= 0.003;
             }
-            draw() {
+            draw(ctx) {
                 ctx.globalAlpha = this.opacity;
                 ctx.fillStyle = this.color;
                 ctx.beginPath();
@@ -673,23 +705,27 @@
             }
         }
 
-        function handleParticles() {
-            for (let i = 0; i < particles.length; i++) {
-                particles[i].update();
-                particles[i].draw();
-                if (particles[i].opacity <= 0) {
-                    particles.splice(i, 1);
+        function handleParticles(particleArray, canvas, ctx) {
+            for (let i = 0; i < particleArray.length; i++) {
+                particleArray[i].update();
+                particleArray[i].draw(ctx);
+                if (particleArray[i].opacity <= 0) {
+                    particleArray.splice(i, 1);
                     i--;
                 }
             }
-            if (particles.length < 80) {
-                particles.push(new Particle());
+            if (particleArray.length < 60) {
+                particleArray.push(new Particle(canvas));
             }
         }
 
         function animate() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            handleParticles();
+            ctxHero.clearRect(0, 0, canvasHero.width, canvasHero.height);
+            ctxFooter.clearRect(0, 0, canvasFooter.width, canvasFooter.height);
+            
+            handleParticles(particlesHero, canvasHero, ctxHero);
+            handleParticles(particlesFooter, canvasFooter, ctxFooter);
+            
             requestAnimationFrame(animate);
         }
         animate();
