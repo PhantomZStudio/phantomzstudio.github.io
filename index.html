@@ -175,6 +175,26 @@
             color: #fff;
         }
 
+        /* === AUDIO BUTTON STYLES === */
+        .audio-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.7rem;
+            padding: 12px 30px;
+            border-color: rgba(255, 255, 255, 0.4);
+        }
+
+        .audio-btn.playing {
+            border-color: var(--accent-purple);
+            color: var(--accent-purple);
+            box-shadow: 0 0 20px rgba(157, 0, 255, 0.3);
+        }
+
+        #audio-icon {
+            font-size: 0.9rem;
+        }
+
         /* --- WORLD BIOMES GRID --- */
         .section-title {
             font-family: var(--font-head); font-size: 2.5rem; text-align: center;
@@ -305,6 +325,41 @@
             .main-logo { width: 300px; }
             .section-title { font-size: 1.8rem; }
         }
+
+        /* === MUSIC CONTROL STYLE === */
+        #music-control {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            z-index: 2000;
+        }
+
+        .music-btn {
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            transition: 0.3s;
+            backdrop-filter: blur(5px);
+        }
+
+        .music-btn:hover {
+            border-color: var(--accent-purple);
+            box-shadow: 0 0 15px rgba(157, 0, 255, 0.5);
+            transform: scale(1.1);
+        }
+
+        .music-btn.active {
+            border-color: var(--accent-purple);
+            color: var(--accent-purple);
+        }
     </style>
 </head>
 <body>
@@ -337,8 +392,17 @@
 
     <section id="story">
         <span class="section-label">Fragmented History</span>
+
+        <audio id="story-audio" src="assets/Story.mp3" preload="auto"></audio>
+        <div class="audio-control-wrapper" style="margin-bottom: 40px;">
+            <button id="audio-btn" class="btn-cinematic audio-btn">
+                <span id="audio-icon">▶</span> Play Narration
+            </button>
+        </div>
+
         <div class="story-container">
             <p class="story-line">The world is no longer alive.</p>
+            ```
             <p class="story-line">What remains are fragments—of cities, of memories, of something that once thrived.</p>
             <br>
             <p class="story-line">Long before the fall, civilizations reached heights beyond imagination.</p>
@@ -555,6 +619,16 @@
         <p style="margin-top: 80px; font-size: 0.7rem; color: #333; letter-spacing: 2px;">© 2026 THE LAST RUIN PROJECT BY PHANTOMZ STUDIO. ALL RIGHTS RESERVED.</p>
     </footer>
 
+    <audio id="theme-song" loop>
+        <source src="assets/Theme.MP3" type="audio/mpeg">
+    </audio>
+
+    <div id="music-control">
+        <button id="music-toggle" class="music-btn">
+            <span id="music-icon">🔇</span>
+        </button>
+    </div>
+
     <script>
         // --- 1. NAVBAR SCROLL EFFECT ---
         window.onscroll = function() {
@@ -648,6 +722,77 @@
                 }
             });
         });
+
+        // --- 5. AUDIO CONTROLS ---
+        const storyAudio = document.getElementById('story-audio');
+        const audioBtn = document.getElementById('audio-btn');
+        const audioIcon = document.getElementById('audio-icon');
+        let isPlaying = false;
+
+        audioBtn.addEventListener('click', function() {
+            if (isPlaying) {
+                storyAudio.pause();
+                audioIcon.innerHTML = '▶';
+                audioBtn.innerHTML = '<span id="audio-icon">▶</span> Play Narration';
+                audioBtn.classList.remove('playing');
+            } else {
+                storyAudio.play();
+                audioIcon.innerHTML = '⏸';
+                audioBtn.innerHTML = '<span id="audio-icon">⏸</span> Pause Narration';
+                audioBtn.classList.add('playing');
+            }
+            isPlaying = !isPlaying;
+        });
+
+        // Reset tombol jika audio sudah selesai (sampai akhir)
+        storyAudio.addEventListener('ended', function() {
+            isPlaying = false;
+            audioBtn.innerHTML = '<span id="audio-icon">▶</span> Play Narration';
+            audioBtn.classList.remove('playing');
+        });
+
+        const themeSong = document.getElementById('theme-song');
+        const musicToggle = document.getElementById('music-toggle');
+        const musicIcon = document.getElementById('music-icon');
+        const beginBtn = document.querySelector('.btn-cinematic'); // Tombol di Hero Section
+
+        let isMuted = true;
+
+        // Fungsi untuk memutar musik
+        function playMusic() {
+            themeSong.play().then(() => {
+                isMuted = false;
+                musicIcon.innerHTML = '🔊';
+                musicToggle.classList.add('active');
+            }).catch(error => {
+                console.log("Autoplay dicegah oleh browser, menunggu interaksi.");
+            });
+        }
+
+        // Pemicu 1: Klik tombol "Begin Journey"
+        beginBtn.addEventListener('click', () => {
+            if (isMuted) playMusic();
+        });
+
+        // Pemicu 2: Tombol Manual Toggle (Mute/Unmute)
+        musicToggle.addEventListener('click', () => {
+            if (themeSong.paused) {
+                playMusic();
+            } else {
+                if (themeSong.muted) {
+                    themeSong.muted = false;
+                    musicIcon.innerHTML = '🔊';
+                    musicToggle.classList.add('active');
+                } else {
+                    themeSong.muted = true;
+                    musicIcon.innerHTML = '🔇';
+                    musicToggle.classList.remove('active');
+                }
+            }
+        });
+
+        // Opsional: Kecilkan volume agar tidak terlalu keras (0.0 sampai 1.0)
+        themeSong.volume = 0.5;
     </script>
 </body>
 </html>
